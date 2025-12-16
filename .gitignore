@@ -1,0 +1,136 @@
+# ================================
+# POS-PT.IndoAugust - Git Ignore
+# NestJS + Prisma + TypeScript
+# ================================
+
+# ========================
+# Dependencies
+# ========================
+node_modules/
+.pnp/
+.pnp.js
+
+# ========================
+# Build Output
+# ========================
+dist/
+build/
+out/
+*.js.map
+
+# ========================
+# Environment Variables
+# Keep sensitive data out of version control
+# ========================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# ========================
+# Prisma Generated
+# ========================
+/generated/prisma
+prisma/generated/
+.prisma/
+
+# ========================
+# IDE & Editors
+# ========================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# ========================
+# OS Generated Files
+# ========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ========================
+# Logs & Debug
+# ========================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ========================
+# Testing & Coverage
+# ========================
+coverage/
+.nyc_output/
+*.lcov
+test-results/
+junit.xml
+
+# ========================
+# TypeScript Cache
+# ========================
+*.tsbuildinfo
+.tsbuildinfo
+
+# ========================
+# Package Manager
+# ========================
+# Uncomment if you prefer to lock versions
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ========================
+# Temporary Files
+# ========================
+tmp/
+temp/
+.tmp/
+.temp/
+.cache/
+
+# ========================
+# Runtime Data
+# ========================
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ========================
+# Optional npm cache
+# ========================
+.npm/
+
+# ========================
+# Optional eslint cache
+# ========================
+.eslintcache
+
+# ========================
+# Optional Prettier cache
+# ========================
+.prettiercache
+
+# ========================
+# Misc
+# ========================
+*.bak
+*.backup
+.history/

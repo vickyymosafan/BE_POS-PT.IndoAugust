@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PT. Indoagustus - Sistem POS</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(
+          135deg,
+          #1a1a2e 0%,
+          #16213e 50%,
+          #0f3460 100%
+        );
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        text-align: center;
+        padding: 2rem;
+      }
+
+      .logo {
+        margin-bottom: 2rem;
+      }
+
+      .logo h1 {
+        font-size: 2.5rem;
+        color: #e94560;
+        text-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+        margin-bottom: 0.5rem;
+      }
+
+      .logo p {
+        color: #a2d2ff;
+        font-size: 1.1rem;
+        font-style: italic;
+      }
+
+      .role-cards {
+        display: flex;
+        gap: 2rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .role-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 2.5rem 3rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        min-width: 250px;
+      }
+
+      .role-card:hover {
+        transform: translateY(-10px);
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        border-color: #e94560;
+      }
+
+      .role-card .icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+      }
+
+      .role-card.pusat .icon {
+        color: #e94560;
+      }
+
+      .role-card.cabang .icon {
+        color: #00d9ff;
+      }
+
+      .role-card h2 {
+        color: #fff;
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .role-card .lokasi {
+        color: #a2d2ff;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .role-card .btn {
+        display: inline-block;
+        padding: 0.75rem 2rem;
+        border-radius: 30px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+      }
+
+      .role-card.pusat .btn {
+        background: linear-gradient(135deg, #e94560, #ff6b6b);
+        color: #fff;
+      }
+
+      .role-card.cabang .btn {
+        background: linear-gradient(135deg, #00d9ff, #00b4d8);
+        color: #1a1a2e;
+      }
+
+      .role-card:hover .btn {
+        transform: scale(1.05);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .footer {
+        margin-top: 3rem;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.9rem;
+      }
+
+      .footer a {
+        color: #e94560;
+        text-decoration: none;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .status-indicator {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        background: #00ff88;
+        border-radius: 50%;
+        margin-right: 8px;
+        animation: pulse 2s infinite;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">
+        <h1>🛒 PT. INDOAGUSTUS</h1>
+        <p>"Kebutuhan Harian, Harga Terjangkau"</p>
+      </div>
+
+      <div class="role-cards">
+        <a href="/pusat" class="role-card pusat">
+          <div class="icon">🏢</div>
+          <h2>PUSAT</h2>
+          <p class="lokasi">📍 Jember</p>
+          <span class="btn">Masuk →</span>
+        </a>
+
+        <a href="/cabang" class="role-card cabang">
+          <div class="icon">🏪</div>
+          <h2>CABANG</h2>
+          <p class="lokasi">📍 Bondowoso</p>
+          <span class="btn">Masuk →</span>
+        </a>
+      </div>
+
+      <div class="footer">
+        <p><span class="status-indicator"></span>Sistem Online</p>
+        <p style="margin-top: 0.5rem">
+          <a href="/api">📚 Dokumentasi API (Swagger)</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

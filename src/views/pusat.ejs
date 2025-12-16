@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Pusat - PT. Indoagustus</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f0f1a;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    .navbar {
+      background: linear-gradient(135deg, #e94560, #ff6b6b);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(233, 69, 96, 0.3);
+    }
+
+    .navbar h1 {
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .navbar .status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      background: #00ff88;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .main-container {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      min-height: calc(100vh - 60px);
+    }
+
+    .sidebar {
+      background: #1a1a2e;
+      padding: 1.5rem;
+      border-right: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar a {
+      display: block;
+      color: #a2d2ff;
+      text-decoration: none;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 0.5rem;
+      transition: all 0.3s;
+    }
+
+    .sidebar a:hover, .sidebar a.active {
+      background: rgba(233, 69, 96, 0.2);
+      color: #e94560;
+    }
+
+    .sidebar a.active {
+      border-left: 3px solid #e94560;
+    }
+
+    .content {
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .page-title {
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+      color: #e94560;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, rgba(233, 69, 96, 0.1), rgba(255, 107, 107, 0.05));
+      border: 1px solid rgba(233, 69, 96, 0.3);
+      border-radius: 15px;
+      padding: 1.5rem;
+    }
+
+    .stat-card h3 {
+      color: #a2d2ff;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .data-table {
+      width: 100%;
+      background: rgba(255,255,255,0.02);
+      border-radius: 15px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .data-table th, .data-table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .data-table th {
+      background: rgba(233, 69, 96, 0.2);
+      color: #e94560;
+      font-weight: 600;
+    }
+
+    .data-table tr:hover {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #e94560, #ff6b6b);
+      color: #fff;
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #00d9ff, #00b4d8);
+      color: #1a1a2e;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .badge-success { background: rgba(0, 255, 136, 0.2); color: #00ff88; }
+    .badge-warning { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+    .badge-danger { background: rgba(233, 69, 96, 0.2); color: #e94560; }
+
+    .realtime-box {
+      background: rgba(0, 217, 255, 0.1);
+      border: 1px solid rgba(0, 217, 255, 0.3);
+      border-radius: 15px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .realtime-box h3 {
+      color: #00d9ff;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    #transaksi-realtime {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .trx-item {
+      background: rgba(255,255,255,0.02);
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #a2d2ff;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1rem;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #e94560;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal.active { display: flex; }
+
+    .modal-content {
+      background: #1a1a2e;
+      border-radius: 20px;
+      padding: 2rem;
+      width: 90%;
+      max-width: 500px;
+      border: 1px solid rgba(233, 69, 96, 0.3);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-header h2 { color: #e94560; }
+    .modal-close { 
+      background: none; 
+      border: none; 
+      color: #fff; 
+      font-size: 1.5rem; 
+      cursor: pointer; 
+    }
+
+    .back-btn {
+      color: #a2d2ff;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .back-btn:hover { color: #fff; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <h1>🏢 PUSAT JEMBER</h1>
+    <div class="status">
+      <span class="status-dot"></span>
+      <span>Online</span>
+    </div>
+  </nav>
+
+  <div class="main-container">
+    <aside class="sidebar">
+      <a href="/" class="back-btn">← Kembali</a>
+      <a href="#produk" class="active" onclick="showSection('produk')">📦 Produk</a>
+      <a href="#kategori" onclick="showSection('kategori')">📁 Kategori</a>
+      <a href="#sync" onclick="showSection('sync')">🔄 Sinkronisasi</a>
+      <a href="#laporan" onclick="showSection('laporan')">📊 Laporan</a>
+      <a href="#transaksi" onclick="showSection('transaksi')">📋 Transaksi Masuk</a>
+    </aside>
+
+    <main class="content">
+      <!-- PRODUK SECTION -->
+      <section id="section-produk">
+        <h2 class="page-title">📦 Kelola Produk</h2>
+        
+        <div class="stats-grid">
+          <div class="stat-card">
+            <h3>Total Produk</h3>
+            <div class="value" id="stat-total-produk">-</div>
+          </div>
+          <div class="stat-card">
+            <h3>Produk Aktif</h3>
+            <div class="value" id="stat-produk-aktif">-</div>
+          </div>
+          <div class="stat-card">
+            <h3>Kategori</h3>
+            <div class="value" id="stat-kategori">-</div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="openModal('modal-produk')">+ Tambah Produk</button>
+        <button class="btn btn-success" onclick="syncKeCabang()">🔄 Sync ke Cabang</button>
+
+        <table class="data-table" style="margin-top: 1.5rem;">
+          <thead>
+            <tr>
+              <th>Kode</th>
+              <th>Nama Produk</th>
+              <th>Kategori</th>
+              <th>Harga Dasar</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="table-produk">
+            <tr><td colspan="6" style="text-align:center;">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- KATEGORI SECTION -->
+      <section id="section-kategori" style="display:none;">
+        <h2 class="page-title">📁 Kelola Kategori</h2>
+        
+        <button class="btn btn-primary" onclick="openModal('modal-kategori')">+ Tambah Kategori</button>
+
+        <table class="data-table" style="margin-top: 1.5rem;">
+          <thead>
+            <tr>
+              <th>Nama Kategori</th>
+              <th>Deskripsi</th>
+              <th>Jumlah Produk</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="table-kategori">
+            <tr><td colspan="4" style="text-align:center;">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- SYNC SECTION -->
+      <section id="section-sync" style="display:none;">
+        <h2 class="page-title">🔄 Status Sinkronisasi</h2>
+        
+        <div class="stats-grid">
+          <div class="stat-card">
+            <h3>Pending</h3>
+            <div class="value" id="sync-pending">0</div>
+          </div>
+          <div class="stat-card">
+            <h3>Tersinkronisasi</h3>
+            <div class="value" id="sync-synced">0</div>
+          </div>
+          <div class="stat-card">
+            <h3>Gagal</h3>
+            <div class="value" id="sync-failed">0</div>
+          </div>
+        </div>
+
+        <button class="btn btn-success" onclick="syncKeCabang()">🔄 Kirim Produk ke Cabang</button>
+
+        <h3 style="margin-top: 2rem; color: #a2d2ff;">Log Sinkronisasi</h3>
+        <table class="data-table" style="margin-top: 1rem;">
+          <thead>
+            <tr>
+              <th>Waktu</th>
+              <th>Tipe Data</th>
+              <th>Arah</th>
+              <th>Status</th>
+              <th>Pesan</th>
+            </tr>
+          </thead>
+          <tbody id="table-log-sync">
+            <tr><td colspan="5" style="text-align:center;">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- LAPORAN SECTION -->
+      <section id="section-laporan" style="display:none;">
+        <h2 class="page-title">📊 Laporan Penjualan</h2>
+        
+        <div class="stats-grid" id="laporan-stats">
+          <div class="stat-card">
+            <h3>Total Transaksi</h3>
+            <div class="value" id="laporan-total-trx">-</div>
+          </div>
+          <div class="stat-card">
+            <h3>Total Penjualan</h3>
+            <div class="value" id="laporan-total-sales">-</div>
+          </div>
+        </div>
+
+        <table class="data-table" style="margin-top: 1.5rem;">
+          <thead>
+            <tr>
+              <th>Cabang</th>
+              <th>Jumlah Transaksi</th>
+              <th>Total Penjualan</th>
+            </tr>
+          </thead>
+          <tbody id="table-laporan">
+            <tr><td colspan="3" style="text-align:center;">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- TRANSAKSI MASUK SECTION -->
+      <section id="section-transaksi" style="display:none;">
+        <h2 class="page-title">📋 Transaksi Masuk dari Cabang</h2>
+        
+        <div class="realtime-box">
+          <h3><span class="status-dot"></span> Realtime Feed</h3>
+          <div id="transaksi-realtime">
+            <p style="color: #a2d2ff;">Menunggu transaksi masuk...</p>
+          </div>
+        </div>
+
+        <table class="data-table" style="margin-top: 1.5rem;">
+          <thead>
+            <tr>
+              <th>No. Transaksi</th>
+              <th>Cabang</th>
+              <th>Tanggal</th>
+              <th>Total</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="table-transaksi">
+            <tr><td colspan="5" style="text-align:center;">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL PRODUK -->
+  <div class="modal" id="modal-produk">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Tambah Produk</h2>
+        <button class="modal-close" onclick="closeModal('modal-produk')">&times;</button>
+      </div>
+      <form id="form-produk" onsubmit="submitProduk(event)">
+        <div class="form-group">
+          <label>Kode Produk</label>
+          <input type="text" class="form-control" name="kodeProduk" required placeholder="PRD-001">
+        </div>
+        <div class="form-group">
+          <label>Nama Produk</label>
+          <input type="text" class="form-control" name="namaProduk" required placeholder="Beras Premium 5kg">
+        </div>
+        <div class="form-group">
+          <label>Kategori</label>
+          <select class="form-control" name="kategoriId" id="select-kategori" required>
+            <option value="">Pilih Kategori</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Harga Dasar</label>
+          <input type="number" class="form-control" name="hargaDasar" required placeholder="50000">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">Simpan</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL KATEGORI -->
+  <div class="modal" id="modal-kategori">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Tambah Kategori</h2>
+        <button class="modal-close" onclick="closeModal('modal-kategori')">&times;</button>
+      </div>
+      <form id="form-kategori" onsubmit="submitKategori(event)">
+        <div class="form-group">
+          <label>Nama Kategori</label>
+          <input type="text" class="form-control" name="nama" required placeholder="Sembako">
+        </div>
+        <div class="form-group">
+          <label>Deskripsi</label>
+          <input type="text" class="form-control" name="deskripsi" placeholder="Kategori kebutuhan pokok">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">Simpan</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const API = '/api/pusat';
+    let socket;
+
+    // Initialize WebSocket
+    function initWebSocket() {
+      socket = io('/ws');
+      
+      socket.on('connect', () => {
+        console.log('Connected to WebSocket');
+        socket.emit('join_room', { room: 'pusat' });
+      });
+
+      socket.on('transaksi_baru', (data) => {
+        console.log('Transaksi baru:', data);
+        addRealtimeTransaction(data.data);
+        loadTransaksi();
+        loadLaporan();
+      });
+
+      socket.on('sync_status', (data) => {
+        console.log('Sync status:', data);
+        loadSyncStatus();
+      });
+    }
+
+    // Section navigation
+    function showSection(section) {
+      document.querySelectorAll('section').forEach(s => s.style.display = 'none');
+      document.getElementById('section-' + section).style.display = 'block';
+      
+      document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+      document.querySelector(`.sidebar a[href="#${section}"]`).classList.add('active');
+
+      // Load data based on section
+      if (section === 'produk') loadProduk();
+      if (section === 'kategori') loadKategori();
+      if (section === 'sync') { loadSyncStatus(); loadLogSync(); }
+      if (section === 'laporan') loadLaporan();
+      if (section === 'transaksi') loadTransaksi();
+    }
+
+    // Modal functions
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    // Format currency
+    function formatRupiah(num) {
+      return 'Rp ' + Number(num).toLocaleString('id-ID');
+    }
+
+    // Load Produk
+    async function loadProduk() {
+      try {
+        const res = await fetch(`${API}/produk?includeInactive=true`);
+        const data = await res.json();
+        
+        document.getElementById('stat-total-produk').textContent = data.length;
+        document.getElementById('stat-produk-aktif').textContent = data.filter(p => p.isAktif).length;
+
+        const tbody = document.getElementById('table-produk');
+        if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Belum ada produk</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.map(p => `
+          <tr>
+            <td>${p.kodeProduk}</td>
+            <td>${p.namaProduk}</td>
+            <td>${p.kategori?.nama || '-'}</td>
+            <td>${formatRupiah(p.hargaDasar)}</td>
+            <td><span class="badge ${p.isAktif ? 'badge-success' : 'badge-danger'}">${p.isAktif ? 'Aktif' : 'Nonaktif'}</span></td>
+            <td>
+              ${p.isAktif 
+                ? `<button class="btn btn-primary" onclick="toggleProduk('${p.id}', false)" style="font-size:0.8rem;">Nonaktifkan</button>`
+                : `<button class="btn btn-success" onclick="toggleProduk('${p.id}', true)" style="font-size:0.8rem;">Aktifkan</button>`
+              }
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Error loading produk:', err);
+      }
+    }
+
+    // Load Kategori
+    async function loadKategori() {
+      try {
+        const res = await fetch(`${API}/kategori`);
+        const data = await res.json();
+        
+        document.getElementById('stat-kategori').textContent = data.length;
+
+        // Update select options
+        const select = document.getElementById('select-kategori');
+        select.innerHTML = '<option value="">Pilih Kategori</option>' + 
+          data.map(k => `<option value="${k.id}">${k.nama}</option>`).join('');
+
+        const tbody = document.getElementById('table-kategori');
+        if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Belum ada kategori</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.map(k => `
+          <tr>
+            <td>${k.nama}</td>
+            <td>${k.deskripsi || '-'}</td>
+            <td>${k.produk?.length || 0}</td>
+            <td>
+              <button class="btn btn-primary" onclick="deleteKategori('${k.id}')" style="font-size:0.8rem;">Hapus</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Error loading kategori:', err);
+      }
+    }
+
+    // Load Sync Status
+    async function loadSyncStatus() {
+      try {
+        const res = await fetch(`${API}/sync/status`);
+        const data = await res.json();
+        
+        document.getElementById('sync-pending').textContent = data.pendingCount;
+        document.getElementById('sync-synced').textContent = data.syncedCount;
+        document.getElementById('sync-failed').textContent = data.failedCount;
+      } catch (err) {
+        console.error('Error loading sync status:', err);
+      }
+    }
+
+    // Load Log Sync
+    async function loadLogSync() {
+      try {
+        const res = await fetch(`${API}/sync/log`);
+        const data = await res.json();
+        
+        const tbody = document.getElementById('table-log-sync');
+        if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada log</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.map(l => `
+          <tr>
+            <td>${new Date(l.lastAttempt).toLocaleString('id-ID')}</td>
+            <td>${l.tipeData}</td>
+            <td>${l.arahReplikasi}</td>
+            <td><span class="badge ${l.status === 'SYNCED' ? 'badge-success' : 'badge-danger'}">${l.status}</span></td>
+            <td>${l.errorMessage || '-'}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Error loading log sync:', err);
+      }
+    }
+
+    // Load Laporan
+    async function loadLaporan() {
+      try {
+        const res = await fetch(`${API}/transaksi/laporan`);
+        const data = await res.json();
+        
+        let totalTrx = 0;
+        let totalSales = 0;
+        
+        data.forEach(l => {
+          totalTrx += l.totalTransaksi;
+          totalSales += Number(l.totalPenjualan) || 0;
+        });
+
+        document.getElementById('laporan-total-trx').textContent = totalTrx;
+        document.getElementById('laporan-total-sales').textContent = formatRupiah(totalSales);
+
+        const tbody = document.getElementById('table-laporan');
+        if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Belum ada data</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.map(l => `
+          <tr>
+            <td>${l.lokasiCabang}</td>
+            <td>${l.totalTransaksi}</td>
+            <td>${formatRupiah(l.totalPenjualan)}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Error loading laporan:', err);
+      }
+    }
+
+    // Load Transaksi
+    async function loadTransaksi() {
+      try {
+        const res = await fetch(`${API}/transaksi`);
+        const data = await res.json();
+        
+        const tbody = document.getElementById('table-transaksi');
+        if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada transaksi</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.map(t => `
+          <tr>
+            <td>${t.nomorTransaksi}</td>
+            <td>${t.lokasiCabang}</td>
+            <td>${new Date(t.tanggal).toLocaleString('id-ID')}</td>
+            <td>${formatRupiah(t.totalHarga)}</td>
+            <td><span class="badge ${t.statusSync === 'SYNCED' ? 'badge-success' : 'badge-warning'}">${t.statusSync}</span></td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Error loading transaksi:', err);
+      }
+    }
+
+    // Add realtime transaction to feed
+    function addRealtimeTransaction(trx) {
+      const container = document.getElementById('transaksi-realtime');
+      const item = document.createElement('div');
+      item.className = 'trx-item';
+      item.innerHTML = `
+        <div>
+          <strong>${trx.nomorTransaksi}</strong>
+          <div style="font-size:0.8rem;color:#a2d2ff;">${trx.lokasiCabang} - ${new Date().toLocaleTimeString('id-ID')}</div>
+        </div>
+        <div>${formatRupiah(trx.totalHarga)}</div>
+      `;
+      container.insertBefore(item, container.firstChild);
+      
+      // Limit to 10 items
+      while (container.children.length > 10) {
+        container.removeChild(container.lastChild);
+      }
+    }
+
+    // Submit Produk
+    async function submitProduk(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        kodeProduk: form.kodeProduk.value,
+        namaProduk: form.namaProduk.value,
+        kategoriId: form.kategoriId.value,
+        hargaDasar: Number(form.hargaDasar.value)
+      };
+
+      try {
+        const res = await fetch(`${API}/produk`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+          alert('Produk berhasil ditambahkan!');
+          form.reset();
+          closeModal('modal-produk');
+          loadProduk();
+        } else {
+          const err = await res.json();
+          alert('Error: ' + (err.message || 'Gagal menambah produk'));
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    // Submit Kategori
+    async function submitKategori(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        nama: form.nama.value,
+        deskripsi: form.deskripsi.value || undefined
+      };
+
+      try {
+        const res = await fetch(`${API}/kategori`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+          alert('Kategori berhasil ditambahkan!');
+          form.reset();
+          closeModal('modal-kategori');
+          loadKategori();
+        } else {
+          const err = await res.json();
+          alert('Error: ' + (err.message || 'Gagal menambah kategori'));
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    // Toggle Produk Active
+    async function toggleProduk(id, activate) {
+      try {
+        const url = activate ? `${API}/produk/${id}/activate` : `${API}/produk/${id}`;
+        const method = activate ? 'POST' : 'DELETE';
+        
+        const res = await fetch(url, { method });
+        if (res.ok) {
+          loadProduk();
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    // Delete Kategori
+    async function deleteKategori(id) {
+      if (!confirm('Yakin ingin menghapus kategori ini?')) return;
+      
+      try {
+        const res = await fetch(`${API}/kategori/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          loadKategori();
+        } else {
+          const err = await res.json();
+          alert('Error: ' + (err.message || 'Gagal menghapus kategori'));
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    // Sync to Cabang
+    async function syncKeCabang() {
+      try {
+        const res = await fetch(`${API}/sync/kirim-ke-cabang`, { method: 'POST' });
+        const data = await res.json();
+        alert(`Sinkronisasi selesai!\nBerhasil: ${data.success}\nGagal: ${data.failed}`);
+        loadSyncStatus();
+        loadLogSync();
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      initWebSocket();
+      loadProduk();
+      loadKategori();
+    });
+  </script>
+</body>
+</html>
