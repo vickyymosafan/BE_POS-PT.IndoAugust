@@ -11,6 +11,21 @@ import { StatusSinkronisasiDto, LogSinkronisasiDto } from './dto';
 export class SinkronisasiPusatController {
   constructor(private readonly sinkronisasiService: SinkronisasiService) {}
 
+  @Get('status')
+  @ApiOperation({
+    summary: 'Lihat status sinkronisasi pusat',
+    description:
+      'Menampilkan jumlah produk yang sudah disinkronkan dan log terakhir',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Status sinkronisasi pusat',
+    type: StatusSinkronisasiDto,
+  })
+  async getStatus() {
+    return await this.sinkronisasiService.getStatusSinkronisasiPusat();
+  }
+
   @Post('kirim-ke-cabang')
   @ApiOperation({
     summary: 'Kirim produk ke cabang (sinkron)',
@@ -40,14 +55,14 @@ export class SinkronisasiPusatController {
   }
 
   @Get('log')
-  @ApiOperation({ summary: 'Lihat log sinkronisasi' })
+  @ApiOperation({ summary: 'Lihat log sinkronisasi pusat' })
   @ApiResponse({
     status: 200,
     description: 'Daftar log sinkronisasi',
     type: [LogSinkronisasiDto],
   })
   async getLog() {
-    return await this.sinkronisasiService.getLogSinkronisasi();
+    return await this.sinkronisasiService.getLogSinkronisasiPusat();
   }
 }
 

@@ -223,10 +223,62 @@ export class SinkronisasiService {
   }
 
   /**
+   * Ambil status sinkronisasi untuk Pusat
+   * Menampilkan jumlah produk yang perlu/sudah disinkronkan ke cabang
+   */
+  async getStatusSinkronisasiPusat() {
+    // Count produk aktif di pusat (yang akan disinkronkan)
+    const totalProdukAktif = await this.prismaPusat.produk.count({
+      where: { isAktif: true },
+    });
+
+    // Get last sync log for pusat -> cabang
+    const lastSync = await this.prismaPusat.logSinkronisasi.findFirst({
+      where: { arahReplikasi: 'PUSAT_KE_CABANG' },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Count successful syncs
+    const syncedCount = await this.prismaPusat.logSinkronisasi.count({
+      where: {
+        arahReplikasi: 'PUSAT_KE_CABANG',
+        status: 'SYNCED',
+      },
+    });
+
+    // Count failed syncs
+    const failedCount = await this.prismaPusat.logSinkronisasi.count({
+      where: {
+        arahReplikasi: 'PUSAT_KE_CABANG',
+        status: 'FAILED',
+      },
+    });
+
+    return {
+      pendingCount: totalProdukAktif, // Products to be synced
+      syncedCount,
+      failedCount,
+      lastSyncAt: lastSync?.lastAttempt || null,
+    };
+  }
+
+  /**
    * Ambil log sinkronisasi
    */
   async getLogSinkronisasi(limit: number = 20) {
     return await this.prismaCabang.logSinkronisasi.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+  }
+
+  /**
+   * Ambil log sinkronisasi dari Pusat
+   * Menampilkan log untuk operasi PUSAT_KE_CABANG
+   */
+  async getLogSinkronisasiPusat(limit: number = 20) {
+    return await this.prismaPusat.logSinkronisasi.findMany({
+      where: { arahReplikasi: 'PUSAT_KE_CABANG' },
       orderBy: { createdAt: 'desc' },
       take: limit,
     });
