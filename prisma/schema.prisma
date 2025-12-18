@@ -44,6 +44,7 @@ model Kategori {
   id        String   @id @default(uuid())
   nama      String   @unique
   deskripsi String?
+  isAktif   Boolean  @default(true) @map("is_aktif")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

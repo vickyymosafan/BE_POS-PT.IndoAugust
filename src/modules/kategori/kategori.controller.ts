@@ -4,11 +4,19 @@ import {
   Post,
   Put,
   Delete,
+  Patch,
   Body,
   Param,
+  Query,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { KategoriService } from './kategori.service';
 import {
   CreateKategoriDto,
@@ -26,13 +34,20 @@ export class KategoriController {
 
   @Get()
   @ApiOperation({ summary: 'Ambil semua kategori' })
+  @ApiQuery({
+    name: 'includeInactive',
+    required: false,
+    type: Boolean,
+    description: 'Sertakan kategori non-aktif (soft deleted)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Daftar kategori',
     type: [KategoriResponseDto],
   })
-  async findAll() {
-    return await this.kategoriService.findAll();
+  async findAll(@Query('includeInactive') includeInactive?: string) {
+    const include = includeInactive === 'true';
+    return await this.kategoriService.findAll(include);
   }
 
   @Get(':id')
@@ -65,12 +80,34 @@ export class KategoriController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Hapus kategori' })
+  @ApiOperation({
+    summary: 'Soft delete kategori',
+    description: 'Menonaktifkan kategori (isAktif=false). Data tidak dihapus.',
+  })
   @ApiParam({ name: 'id', description: 'UUID kategori' })
-  @ApiResponse({ status: 200, description: 'Kategori berhasil dihapus' })
+  @ApiResponse({
+    status: 200,
+    description: 'Kategori berhasil dinonaktifkan',
+  })
   @ApiResponse({ status: 404, description: 'Kategori tidak ditemukan' })
-  @ApiResponse({ status: 409, description: 'Kategori masih memiliki produk' })
+  @ApiResponse({ status: 409, description: 'Kategori sudah tidak aktif' })
   async delete(@Param('id', ParseUUIDPipe) id: string) {
     return await this.kategoriService.delete(id);
+  }
+
+  @Patch(':id/restore')
+  @ApiOperation({
+    summary: 'Restore kategori',
+    description: 'Mengaktifkan kembali kategori yang sudah di-soft delete',
+  })
+  @ApiParam({ name: 'id', description: 'UUID kategori' })
+  @ApiResponse({
+    status: 200,
+    description: 'Kategori berhasil diaktifkan kembali',
+  })
+  @ApiResponse({ status: 404, description: 'Kategori tidak ditemukan' })
+  @ApiResponse({ status: 409, description: 'Kategori sudah aktif' })
+  async restore(@Param('id', ParseUUIDPipe) id: string) {
+    return await this.kategoriService.restore(id);
   }
 }

@@ -14,10 +14,17 @@ export class KategoriService {
   constructor(private readonly prismaPusat: PrismaPusatService) {}
 
   /**
-   * Ambil semua kategori
+   * Ambil semua kategori aktif
    */
-  async findAll() {
+  async findAll(includeInactive: boolean = false) {
+    const where = includeInactive ? {} : { isAktif: true };
     return await this.prismaPusat.kategori.findMany({
+      where,
+      include: {
+        produk: {
+          select: { id: true },
+        },
+      },
       orderBy: { nama: 'asc' },
     });
   }
@@ -92,24 +99,36 @@ export class KategoriService {
   }
 
   /**
-   * Hapus kategori
+   * Soft delete kategori (set isAktif = false)
+   * Kategori tetap ada di database, tapi tidak aktif
    */
   async delete(id: string) {
-    await this.findOne(id);
+    const kategori = await this.findOne(id);
 
-    // Cek apakah ada produk terkait
-    const produkCount = await this.prismaPusat.produk.count({
-      where: { kategoriId: id },
-    });
-
-    if (produkCount > 0) {
-      throw new ConflictException(
-        `Tidak dapat menghapus kategori karena masih memiliki ${produkCount} produk`,
-      );
+    if (!kategori.isAktif) {
+      throw new ConflictException(`Kategori sudah tidak aktif`);
     }
 
-    return await this.prismaPusat.kategori.delete({
+    return await this.prismaPusat.kategori.update({
       where: { id },
+      data: { isAktif: false },
+    });
+  }
+
+  /**
+   * Restore kategori yang sudah di-soft delete
+   */
+  async restore(id: string) {
+    const kategori = await this.findOne(id);
+
+    if (kategori.isAktif) {
+      throw new ConflictException(`Kategori sudah aktif`);
+    }
+
+    return await this.prismaPusat.kategori.update({
+      where: { id },
+      data: { isAktif: true },
     });
   }
 }
+

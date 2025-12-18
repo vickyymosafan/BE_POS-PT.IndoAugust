@@ -403,22 +403,29 @@
         <section id="section-kategori" style="display: none">
           <h2 class="page-title">📁 Kelola Kategori</h2>
 
-          <button class="btn btn-primary" onclick="openModal('modal-kategori')">
-            + Tambah Kategori
-          </button>
+          <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem;">
+            <button class="btn btn-primary" onclick="openModal('modal-kategori')">
+              + Tambah Kategori
+            </button>
+            <label style="display: flex; align-items: center; gap: 0.5rem; color: #a2d2ff; cursor: pointer;">
+              <input type="checkbox" id="show-inactive-kategori" onchange="loadKategori()" style="width: 18px; height: 18px;">
+              Tampilkan kategori nonaktif
+            </label>
+          </div>
 
-          <table class="data-table" style="margin-top: 1.5rem">
+          <table class="data-table">
             <thead>
               <tr>
                 <th>Nama Kategori</th>
                 <th>Deskripsi</th>
                 <th>Jumlah Produk</th>
+                <th>Status</th>
                 <th>Aksi</th>
               </tr>
             </thead>
             <tbody id="table-kategori">
               <tr>
-                <td colspan="4" style="text-align: center">Memuat data...</td>
+                <td colspan="5" style="text-align: center">Memuat data...</td>
               </tr>
             </tbody>
           </table>
@@ -733,35 +740,48 @@
       // Load Kategori
       async function loadKategori() {
         try {
-          const res = await fetch(`${API}/kategori`);
+          const showInactive = document.getElementById('show-inactive-kategori')?.checked || false;
+          const url = showInactive ? `${API}/kategori?includeInactive=true` : `${API}/kategori`;
+          const res = await fetch(url);
           const data = await res.json();
 
-          document.getElementById('stat-kategori').textContent = data.length;
+          // Update stat with active count only
+          const activeCount = data.filter(k => k.isAktif !== false).length;
+          document.getElementById('stat-kategori').textContent = activeCount;
 
-          // Update select options
+          // Update select options (only active categories)
           const select = document.getElementById('select-kategori');
+          const activeKategori = data.filter(k => k.isAktif !== false);
           select.innerHTML =
             '<option value="">Pilih Kategori</option>' +
-            data
+            activeKategori
               .map((k) => `<option value="${k.id}">${k.nama}</option>`)
               .join('');
 
           const tbody = document.getElementById('table-kategori');
           if (data.length === 0) {
             tbody.innerHTML =
-              '<tr><td colspan="4" style="text-align:center;">Belum ada kategori</td></tr>';
+              '<tr><td colspan="5" style="text-align:center;">Belum ada kategori</td></tr>';
             return;
           }
 
           tbody.innerHTML = data
             .map(
               (k) => `
-          <tr>
+          <tr style="${k.isAktif === false ? 'opacity: 0.6; background: rgba(255,100,100,0.1);' : ''}">
             <td>${k.nama}</td>
             <td>${k.deskripsi || '-'}</td>
             <td>${k.produk?.length || 0}</td>
             <td>
-              <button class="btn btn-primary" onclick="deleteKategori('${k.id}')" style="font-size:0.8rem;">Hapus</button>
+              <span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; background: ${k.isAktif === false ? '#dc3545' : '#28a745'}; color: white;">
+                ${k.isAktif === false ? 'Nonaktif' : 'Aktif'}
+              </span>
+            </td>
+            <td>
+              ${k.isAktif === false 
+                ? `<button class="btn btn-success" onclick="restoreKategori('${k.id}')" style="font-size:0.8rem;">Restore</button>`
+                : `<button class="btn btn-primary" onclick="deleteKategori('${k.id}')" style="font-size:0.8rem;">Hapus</button>`
+              }
             </td>
           </tr>
         `,
@@ -992,19 +1012,40 @@
         }
       }
 
-      // Delete Kategori
+      // Delete Kategori (Soft Delete)
       async function deleteKategori(id) {
-        if (!confirm('Yakin ingin menghapus kategori ini?')) return;
+        if (!confirm('Yakin ingin menonaktifkan kategori ini?\n(Kategori akan disembunyikan tapi tidak dihapus permanen)')) return;
 
         try {
           const res = await fetch(`${API}/kategori/${id}`, {
             method: 'DELETE',
           });
           if (res.ok) {
+            alert('Kategori berhasil dinonaktifkan!');
             loadKategori();
           } else {
             const err = await res.json();
-            alert('Error: ' + (err.message || 'Gagal menghapus kategori'));
+            alert('Error: ' + (err.message || 'Gagal menonaktifkan kategori'));
+          }
+        } catch (err) {
+          alert('Error: ' + err.message);
+        }
+      }
+
+      // Restore Kategori (Reactivate)
+      async function restoreKategori(id) {
+        if (!confirm('Yakin ingin mengaktifkan kembali kategori ini?')) return;
+
+        try {
+          const res = await fetch(`${API}/kategori/${id}/restore`, {
+            method: 'PATCH',
+          });
+          if (res.ok) {
+            alert('Kategori berhasil diaktifkan kembali!');
+            loadKategori();
+          } else {
+            const err = await res.json();
+            alert('Error: ' + (err.message || 'Gagal mengaktifkan kategori'));
           }
         } catch (err) {
           alert('Error: ' + err.message);
