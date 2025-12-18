@@ -5,10 +5,9 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// NOTE: Ganti dengan env("DATABASE_URL") untuk production
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://postgres:postgres@localhost:5432/pos_pusat?schema=public"
+  url      = env("DATABASE_URL")
 }
 
 // ========================

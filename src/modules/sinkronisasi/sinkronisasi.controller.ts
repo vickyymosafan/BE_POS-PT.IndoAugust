@@ -13,9 +13,9 @@ export class SinkronisasiPusatController {
 
   @Post('kirim-ke-cabang')
   @ApiOperation({
-    summary: 'Kirim produk ke cabang',
+    summary: 'Kirim produk ke cabang (sinkron)',
     description:
-      'Replikasi satu arah (parsial) - Mengirim produk aktif dari pusat ke cabang',
+      'Replikasi satu arah (parsial) - Mengirim produk aktif dari pusat ke cabang secara sinkron',
   })
   @ApiResponse({
     status: 200,
@@ -23,6 +23,20 @@ export class SinkronisasiPusatController {
   })
   async kirimKeCabang() {
     return await this.sinkronisasiService.kirimProdukKeCabang();
+  }
+
+  @Post('queue-kirim-ke-cabang')
+  @ApiOperation({
+    summary: 'Kirim produk ke cabang (asinkron)',
+    description:
+      'Replikasi asinkron - Menambahkan job ke Bull Queue untuk diproses background',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Job ditambahkan ke queue',
+  })
+  async queueKirimKeCabang() {
+    return await this.sinkronisasiService.queueKirimProdukKeCabang();
   }
 
   @Get('log')
@@ -61,9 +75,9 @@ export class SinkronisasiCabangController {
 
   @Post('kirim-ke-pusat')
   @ApiOperation({
-    summary: 'Kirim transaksi ke pusat',
+    summary: 'Kirim transaksi ke pusat (sinkron)',
     description:
-      'Replikasi asinkron (penuh) - Mengirim semua transaksi pending ke pusat',
+      'Replikasi sinkron (penuh) - Mengirim semua transaksi pending ke pusat',
   })
   @ApiResponse({
     status: 200,
@@ -71,6 +85,20 @@ export class SinkronisasiCabangController {
   })
   async kirimKePusat() {
     return await this.sinkronisasiService.kirimTransaksiKePusat();
+  }
+
+  @Post('queue-kirim-ke-pusat')
+  @ApiOperation({
+    summary: 'Kirim transaksi ke pusat (asinkron)',
+    description:
+      'Replikasi asinkron - Menambahkan job ke Bull Queue untuk diproses background',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Job ditambahkan ke queue',
+  })
+  async queueKirimKePusat() {
+    return await this.sinkronisasiService.queueKirimTransaksiKePusat();
   }
 
   @Get('log')

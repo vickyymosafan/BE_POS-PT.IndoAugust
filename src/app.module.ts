@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { BullModule } from '@nestjs/bull';
 import { PrismaModule } from './prisma';
 import { KategoriModule } from './modules/kategori';
 import { ProdukModule } from './modules/produk';
@@ -18,6 +19,18 @@ import { ViewController } from './views/view.controller';
     // Konfigurasi environment
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+
+    // Bull Queue configuration for async replication
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        redis: {
+          host: 'localhost',
+          port: parseInt(configService.get('REDIS_PORT') || '6379', 10),
+        },
+      }),
+      inject: [ConfigService],
     }),
 
     // Database (dual datasource)

@@ -1,7 +1,6 @@
 import { Controller, Get, Res } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import type { Response } from 'express';
-import * as path from 'path';
 
 /**
  * ViewController - Server-side rendered views untuk UI simulasi
@@ -11,16 +10,16 @@ import * as path from 'path';
 export class ViewController {
   @Get()
   index(@Res() res: Response) {
-    res.sendFile(path.join(__dirname, '..', 'views', 'index.ejs'));
+    return res.render('index', {});
   }
 
   @Get('pusat')
   pusat(@Res() res: Response) {
-    res.sendFile(path.join(__dirname, '..', 'views', 'pusat.ejs'));
+    return res.render('pusat', {});
   }
 
   @Get('cabang')
   cabang(@Res() res: Response) {
-    res.sendFile(path.join(__dirname, '..', 'views', 'cabang.ejs'));
+    return res.render('cabang', {});
   }
 }

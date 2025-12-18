@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bull';
+import type { Queue } from 'bull';
 import { PrismaPusatService, PrismaCabangService } from '../../prisma';
 import { ProdukService } from '../produk/produk.service';
 import { TransaksiService } from '../transaksi/transaksi.service';
+import { StatusSync } from '../transaksi/dto';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
-import {
-  TipeDataSync,
-  ArahReplikasiDto,
-  StatusSyncDto,
-} from './dto';
+import { TipeDataSync, ArahReplikasiDto, StatusSyncDto } from './dto';
+import { SINKRONISASI_QUEUE } from './processors/sinkronisasi.processor';
 
 /**
  * SinkronisasiService - Mengimplementasikan 4 sistem replikasi
@@ -20,6 +20,8 @@ export class SinkronisasiService {
     private readonly produkService: ProdukService,
     private readonly transaksiService: TransaksiService,
     private readonly realtimeGateway: RealtimeGateway,
+    @InjectQueue(SINKRONISASI_QUEUE)
+    private readonly sinkronisasiQueue: Queue,
   ) {}
 
   /**
@@ -151,10 +153,11 @@ export class SinkronisasiService {
         };
 
         // Kirim ke pusat
-        const result = await this.transaksiService.terimaTransaksiDariCabang(dto);
+        const result =
+          await this.transaksiService.terimaTransaksiDariCabang(dto);
 
         // Update status di cabang
-        await this.transaksiService.updateStatusSync(trx.id, 'SYNCED' as any);
+        await this.transaksiService.updateStatusSync(trx.id, StatusSync.SYNCED);
 
         if (result.isNew) {
           // Notify via WebSocket
@@ -286,5 +289,37 @@ export class SinkronisasiService {
         },
       });
     }
+  }
+
+  /**
+   * ASYNC: Tambahkan job ke queue untuk replikasi produk
+   * Background processing dengan Bull Queue
+   */
+  async queueKirimProdukKeCabang() {
+    const job = await this.sinkronisasiQueue.add('sync-produk-ke-cabang', {
+      triggeredAt: new Date(),
+    });
+
+    return {
+      message: 'Job ditambahkan ke queue',
+      jobId: job.id,
+      queueName: 'sync-produk-ke-cabang',
+    };
+  }
+
+  /**
+   * ASYNC: Tambahkan job ke queue untuk replikasi transaksi
+   * Background processing dengan Bull Queue
+   */
+  async queueKirimTransaksiKePusat() {
+    const job = await this.sinkronisasiQueue.add('sync-transaksi-ke-pusat', {
+      triggeredAt: new Date(),
+    });
+
+    return {
+      message: 'Job ditambahkan ke queue',
+      jobId: job.id,
+      queueName: 'sync-transaksi-ke-pusat',
+    };
   }
 }
