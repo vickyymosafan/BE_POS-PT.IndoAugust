@@ -5,7 +5,7 @@
 <h1 align="center">🛒 POS PT. IndoAugust</h1>
 
 <p align="center">
-  <strong>Sistem Point of Sale dengan Replikasi Data Terdistribusi</strong>
+  <strong>Sistem Point of Sale dengan Replikasi Data Terdistribusi (Dual Database)</strong>
 </p>
 
 <p align="center">
@@ -106,108 +106,396 @@ Sistem ini menggunakan **replikasi data asinkron** untuk menjaga konsistensi dat
 
 ---
 
-## 📦 Prerequisites
+## 📦 Prerequisites (Persiapan)
 
-Sebelum memulai, pastikan Anda telah menginstall:
+Sebelum memulai, pastikan Anda telah menginstall software berikut:
 
-- **Node.js** v18 atau lebih tinggi
-- **npm** v9 atau lebih tinggi
-- **PostgreSQL** v15 atau lebih tinggi
-- **Redis** v7 atau lebih tinggi (untuk Bull Queue)
-- **Git** untuk version control
+### 1. Node.js (v18 atau lebih tinggi)
+
+Download dari: https://nodejs.org/en/download/
+
+```powershell
+# Verifikasi instalasi
+node --version    # Harus menampilkan v18.x.x atau lebih
+npm --version     # Harus menampilkan v9.x.x atau lebih
+```
+
+### 2. PostgreSQL (v15 atau lebih tinggi)
+
+Download dari: https://www.postgresql.org/download/windows/
+
+> ⚠️ **PENTING**: Saat instalasi, catat password yang Anda buat untuk user `postgres`!
+
+```powershell
+# Verifikasi instalasi (setelah restart terminal)
+psql --version    # Harus menampilkan psql (PostgreSQL) 15.x
+```
+
+### 3. Redis (v7 atau lebih tinggi)
+
+**Opsi A: Menggunakan Docker (Direkomendasikan)**
+
+```powershell
+# Install Docker Desktop terlebih dahulu dari https://www.docker.com/products/docker-desktop/
+docker run -d --name redis -p 6379:6379 redis:alpine
+```
+
+**Opsi B: Install Redis untuk Windows**
+
+Download dari: https://github.com/microsoftarchive/redis/releases
+
+### 4. Git
+
+Download dari: https://git-scm.com/download/win
+
+```powershell
+# Verifikasi instalasi
+git --version
+```
 
 ---
 
-## 🚀 Instalasi
+## 🚀 TUTORIAL SETUP LENGKAP (Step-by-Step)
 
-### 1. Clone Repository
+Ikuti panduan ini secara berurutan untuk setup project dari awal hingga bisa menjalankan aplikasi dengan 2 database.
 
-```bash
+---
+
+### 📌 Step 1: Clone Repository
+
+```powershell
+# Clone repository
 git clone https://github.com/vickyymosafan/BE_POS-PT.IndoAugust.git
+
+# Masuk ke direktori project
 cd BE_POS-PT.IndoAugust
 ```
 
-### 2. Install Dependencies
+---
 
-```bash
+### 📌 Step 2: Install Dependencies
+
+```powershell
+# Install semua dependencies
 npm install
 ```
 
-### 3. Setup Environment Variables
+> ⏱️ Proses ini mungkin memakan waktu 2-5 menit tergantung koneksi internet.
 
-```bash
-# Copy environment file
-cp .env.example .env
+---
 
-# Edit sesuai konfigurasi lokal Anda
+### 📌 Step 3: Membuat 2 Database PostgreSQL
+
+> ⚠️ **PENTING**: Anda harus membuat **2 database** yaitu `pos_pusat` dan `pos_cabang`.
+
+**Metode A: Menggunakan Command Line (psql)**
+
+```powershell
+# Buka terminal dan jalankan psql
+psql -U postgres
+
+# Masukkan password PostgreSQL Anda saat diminta
+
+# Buat database PUSAT (Jember)
+CREATE DATABASE pos_pusat;
+
+# Buat database CABANG (Bondowoso)
+CREATE DATABASE pos_cabang;
+
+# Verifikasi database sudah dibuat
+\l
+
+# Keluar dari psql
+\q
 ```
 
-### 4. Setup Database
+**Metode B: Menggunakan pgAdmin (GUI)**
 
-```bash
-# Buat database PostgreSQL
-createdb pos_pusat
-createdb pos_cabang
+1. Buka pgAdmin dari Start Menu
+2. Klik kanan pada "Databases" → "Create" → "Database..."
+3. Isi Name: `pos_pusat` → Klik "Save"
+4. Ulangi langkah 2-3 untuk membuat database `pos_cabang`
 
-# Jalankan migrasi Prisma
-npx prisma migrate dev
+**Verifikasi Database Berhasil Dibuat:**
 
-# Generate Prisma Client
+```powershell
+psql -U postgres -c "\l"
+# Output harus menampilkan pos_pusat dan pos_cabang dalam daftar
+```
+
+---
+
+### 📌 Step 4: Konfigurasi Environment Variables
+
+```powershell
+# Copy file environment template
+copy .env.example .env
+
+# Buka file .env dengan editor favorit Anda (Notepad, VS Code, dll)
+```
+
+**Edit file `.env` sesuai konfigurasi PostgreSQL Anda:**
+
+```env
+# Environment Setup untuk Sistem POS PT. Indoagustus
+
+# Database URL utama (untuk Prisma generate/migrate)
+DATABASE_URL="postgresql://postgres:PASSWORD_ANDA@localhost:5432/pos_pusat?schema=public"
+
+# Database Pusat (Jember)
+DATABASE_PUSAT_URL="postgresql://postgres:PASSWORD_ANDA@localhost:5432/pos_pusat?schema=public"
+
+# Database Cabang (Bondowoso)
+DATABASE_CABANG_URL="postgresql://postgres:PASSWORD_ANDA@localhost:5432/pos_cabang?schema=public"
+REDIS_PORT="6379"
+
+# Aplikasi
+PORT=3000
+NODE_ENV="development"
+```
+
+> ⚠️ **GANTI `PASSWORD_ANDA`** dengan password PostgreSQL yang Anda buat saat instalasi!
+
+---
+
+### 📌 Step 5: Migrasi Schema ke Database PUSAT
+
+```powershell
+# Generate Prisma Client terlebih dahulu
 npx prisma generate
 
-# (Opsional) Seed data awal
+# Migrasi schema ke database PUSAT
+npx prisma migrate deploy
+```
+
+---
+
+### 📌 Step 6: Migrasi Schema ke Database CABANG
+
+> ⚠️ **PENTING**: Prisma secara default hanya membaca `DATABASE_URL`. Untuk migrasi ke database cabang, kita perlu mengganti sementara nilai `DATABASE_URL`.
+
+**PowerShell:**
+
+```powershell
+# Set DATABASE_URL ke database CABANG secara temporary
+$env:DATABASE_URL="postgresql://postgres:PASSWORD_ANDA@localhost:5432/pos_cabang?schema=public"
+
+# Jalankan migrasi ke database CABANG
+npx prisma migrate deploy
+
+# Reset kembali ke default (opsional, karena .env akan dibaca ulang saat restart)
+$env:DATABASE_URL="postgresql://postgres:PASSWORD_ANDA@localhost:5432/pos_pusat?schema=public"
+```
+
+**CMD (Command Prompt):**
+
+```cmd
+:: Set DATABASE_URL ke database CABANG secara temporary
+set DATABASE_URL=postgresql://postgres:PASSWORD_ANDA@localhost:5432/pos_cabang?schema=public
+
+:: Jalankan migrasi ke database CABANG
+npx prisma migrate deploy
+```
+
+**Git Bash / Linux / macOS:**
+
+```bash
+# Set DATABASE_URL ke database CABANG secara temporary dan jalankan migrasi
+DATABASE_URL="postgresql://postgres:PASSWORD_ANDA@localhost:5432/pos_cabang?schema=public" npx prisma migrate deploy
+```
+
+---
+
+### 📌 Step 7: Verifikasi Tabel di Kedua Database
+
+```powershell
+# Cek tabel di database PUSAT
+psql -U postgres -d pos_pusat -c "\dt"
+
+# Cek tabel di database CABANG
+psql -U postgres -d pos_cabang -c "\dt"
+```
+
+**Output yang diharapkan (6 tabel):**
+
+```
+            List of relations
+ Schema |        Name        | Type  |  Owner
+--------+--------------------+-------+----------
+ public | _prisma_migrations | table | postgres
+ public | detail_transaksi   | table | postgres
+ public | kategori           | table | postgres
+ public | log_sinkronisasi   | table | postgres
+ public | produk             | table | postgres
+ public | stok               | table | postgres
+ public | transaksi          | table | postgres
+```
+
+---
+
+### 📌 Step 8: (Opsional) Seed Data Awal
+
+```powershell
+# Seed data ke database PUSAT
 npx prisma db seed
 ```
 
-### 5. Jalankan Redis
+---
 
-```bash
-# Windows (dengan Redis installed)
+### 📌 Step 9: Jalankan Redis
+
+**Jika menggunakan Docker:**
+
+```powershell
+# Pastikan container Redis sudah berjalan
+docker start redis
+
+# Verifikasi Redis aktif
+docker ps
+```
+
+**Jika menggunakan Redis Native:**
+
+```powershell
+# Jalankan Redis server
 redis-server
-
-# Atau menggunakan Docker
-docker run -d -p 6379:6379 redis:alpine
 ```
 
 ---
 
-## ⚙️ Konfigurasi
+### 📌 Step 10: Jalankan Aplikasi
 
-### Environment Variables
-
-| Variable              | Description                     | Default                                                    |
-| --------------------- | ------------------------------- | ---------------------------------------------------------- |
-| `DATABASE_URL`        | URL database untuk Prisma       | `postgresql://postgres:postgres@localhost:5432/pos_pusat`  |
-| `DATABASE_PUSAT_URL`  | URL database Pusat (Jember)     | `postgresql://postgres:postgres@localhost:5432/pos_pusat`  |
-| `DATABASE_CABANG_URL` | URL database Cabang (Bondowoso) | `postgresql://postgres:postgres@localhost:5432/pos_cabang` |
-| `REDIS_PORT`          | Port Redis untuk Bull Queue     | `6379`                                                     |
-| `PORT`                | Port aplikasi                   | `3000`                                                     |
-| `NODE_ENV`            | Environment mode                | `development`                                              |
-
----
-
-## 🏃 Menjalankan Aplikasi
-
-```bash
+```powershell
 # Development mode (hot-reload)
 npm run start:dev
-
-# Production mode
-npm run build
-npm run start:prod
-
-# Debug mode
-npm run start:debug
 ```
 
-### Akses Aplikasi
+**Output yang diharapkan:**
 
-| URL                            | Deskripsi                    |
-| ------------------------------ | ---------------------------- |
-| `http://localhost:3000`        | Landing Page                 |
-| `http://localhost:3000/api`    | 📚 Swagger API Documentation |
-| `http://localhost:3000/pusat`  | 🏢 Dashboard Pusat           |
-| `http://localhost:3000/cabang` | 🏪 Dashboard Cabang          |
+```
+[Nest] LOG [NestFactory] Starting Nest application...
+✅ Database Pusat (Jember) connected
+✅ Database Cabang (Bondowoso) connected
+[Nest] LOG [NestApplication] Nest application successfully started
+🚀 Application is running on: http://localhost:3000
+```
+
+---
+
+### 📌 Step 11: Verifikasi Setup Berhasil
+
+Buka browser dan akses URL berikut:
+
+| URL                            | Deskripsi                    | Status |
+| ------------------------------ | ---------------------------- | ------ |
+| `http://localhost:3000`        | Landing Page                 | ✅     |
+| `http://localhost:3000/api`    | 📚 Swagger API Documentation | ✅     |
+| `http://localhost:3000/pusat`  | 🏢 Dashboard Pusat           | ✅     |
+| `http://localhost:3000/cabang` | 🏪 Dashboard Cabang          | ✅     |
+
+---
+
+## 🔧 Troubleshooting (Mengatasi Masalah Umum)
+
+### ❌ Error: `connect ECONNREFUSED 127.0.0.1:5432`
+
+**Penyebab**: PostgreSQL tidak berjalan.
+
+**Solusi:**
+
+```powershell
+# Windows: Cek status service PostgreSQL
+Get-Service -Name "postgresql*"
+
+# Jika tidak running, start service
+Start-Service -Name "postgresql-x64-15"  # Sesuaikan dengan versi Anda
+```
+
+Atau buka **Services** (Win + R → `services.msc`) dan start "postgresql-x64-15".
+
+---
+
+### ❌ Error: `database "pos_pusat" does not exist`
+
+**Penyebab**: Database belum dibuat.
+
+**Solusi**: Ikuti [Step 3](#-step-3-membuat-2-database-postgresql) untuk membuat database.
+
+---
+
+### ❌ Error: `password authentication failed for user "postgres"`
+
+**Penyebab**: Password di `.env` tidak sesuai dengan password PostgreSQL.
+
+**Solusi:**
+
+1. Buka file `.env`
+2. Ganti `PASSWORD_ANDA` dengan password yang benar
+3. Restart aplikasi
+
+---
+
+### ❌ Error: `connect ECONNREFUSED 127.0.0.1:6379`
+
+**Penyebab**: Redis tidak berjalan.
+
+**Solusi:**
+
+```powershell
+# Jika menggunakan Docker
+docker start redis
+
+# Jika menggunakan Redis native
+redis-server
+```
+
+---
+
+### ❌ Error: `P3009: migrate found failed migrations`
+
+**Penyebab**: Ada migrasi yang gagal sebelumnya.
+
+**Solusi:**
+
+```powershell
+# Reset migrasi (PERINGATAN: akan menghapus semua data!)
+npx prisma migrate reset
+
+# Atau resolve secara manual
+npx prisma migrate resolve --applied "20251218110334_init"
+```
+
+---
+
+### ❌ Error: `Port 3000 is already in use`
+
+**Penyebab**: Port 3000 sudah digunakan aplikasi lain.
+
+**Solusi:**
+
+```powershell
+# Cari proses yang menggunakan port 3000
+netstat -ano | findstr :3000
+
+# Kill proses tersebut (ganti PID dengan nomor dari output di atas)
+taskkill /PID <PID> /F
+
+# Atau ubah port di .env
+# PORT=3001
+```
+
+---
+
+## ⚙️ Environment Variables Reference
+
+| Variable              | Deskripsi                       | Default                                                    | Required |
+| --------------------- | ------------------------------- | ---------------------------------------------------------- | -------- |
+| `DATABASE_URL`        | URL database untuk Prisma CLI   | `postgresql://postgres:postgres@localhost:5432/pos_pusat`  | ✅       |
+| `DATABASE_PUSAT_URL`  | URL database Pusat (Jember)     | `postgresql://postgres:postgres@localhost:5432/pos_pusat`  | ✅       |
+| `DATABASE_CABANG_URL` | URL database Cabang (Bondowoso) | `postgresql://postgres:postgres@localhost:5432/pos_cabang` | ✅       |
+| `REDIS_PORT`          | Port Redis untuk Bull Queue     | `6379`                                                     | ✅       |
+| `PORT`                | Port aplikasi                   | `3000`                                                     | ❌       |
+| `NODE_ENV`            | Environment mode                | `development`                                              | ❌       |
 
 ---
 
@@ -216,8 +504,9 @@ npm run start:debug
 ```
 POS-PT.IndoAugust/
 ├── prisma/
-│   ├── schema.prisma          # Database schema
-│   └── seed.ts                # Seed data
+│   ├── migrations/            # Database migrations
+│   ├── schema.prisma          # Database schema (6 models)
+│   └── seed.ts                # Seed data awal
 ├── src/
 │   ├── modules/
 │   │   ├── kategori/          # Module kategori produk
@@ -227,8 +516,8 @@ POS-PT.IndoAugust/
 │   │   ├── sinkronisasi/      # Module sync pusat-cabang
 │   │   └── realtime/          # Module WebSocket
 │   ├── prisma/
-│   │   ├── prisma-pusat.service.ts    # Prisma client pusat
-│   │   ├── prisma-cabang.service.ts   # Prisma client cabang
+│   │   ├── prisma-pusat.service.ts    # Prisma client untuk DB PUSAT
+│   │   ├── prisma-cabang.service.ts   # Prisma client untuk DB CABANG
 │   │   └── prisma.module.ts           # Prisma module
 │   ├── views/
 │   │   ├── index.ejs          # Landing page
@@ -243,8 +532,23 @@ POS-PT.IndoAugust/
 ├── .gitignore                 # Git ignore rules
 ├── package.json               # Dependencies
 ├── tsconfig.json              # TypeScript config
-└── README.md                  # Documentation
+└── README.md                  # Documentation (file ini)
 ```
+
+---
+
+## 📊 Database Schema
+
+Project ini menggunakan **6 model database**:
+
+| Model             | Deskripsi                   | Lokasi         |
+| ----------------- | --------------------------- | -------------- |
+| `Kategori`        | Master kategori produk      | Pusat + Cabang |
+| `Produk`          | Master data produk          | Pusat + Cabang |
+| `Stok`            | Stok per lokasi             | Pusat + Cabang |
+| `Transaksi`       | Header transaksi penjualan  | Pusat + Cabang |
+| `DetailTransaksi` | Detail item dalam transaksi | Pusat + Cabang |
+| `LogSinkronisasi` | Log aktivitas sinkronisasi  | Pusat + Cabang |
 
 ---
 
@@ -318,6 +622,22 @@ npm run test:cov
 
 # E2E tests
 npm run test:e2e
+```
+
+---
+
+## 🏃 Menjalankan Aplikasi
+
+```bash
+# Development mode (hot-reload)
+npm run start:dev
+
+# Production mode
+npm run build
+npm run start:prod
+
+# Debug mode
+npm run start:debug
 ```
 
 ---
